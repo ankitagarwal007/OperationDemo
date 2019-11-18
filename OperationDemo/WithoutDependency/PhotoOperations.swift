@@ -50,7 +50,7 @@ class ImageDownloader:Operation{
         }
         
         guard let imageData = try? Data(contentsOf: photoRecord.url) else {return}
-        
+        self.cancel()
         if isCancelled{
             return
         }
@@ -71,6 +71,7 @@ class ImageFiltration:Operation{
     init(_ photoRecord:PhotoRecord) {
         self.photoRecord = photoRecord
     }
+    
     
     override func main() {
         if isCancelled{

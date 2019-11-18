@@ -21,9 +21,18 @@ class PhotoRecord2{
 
 class PendingOperations2{
     lazy var downloadInProgress:[IndexPath:Operation] = [:]
+    lazy var filtrationsInProgress:[IndexPath:Operation] = [:]
+
     lazy var downloadQueue:OperationQueue = {
         var queue = OperationQueue()
         queue.name = "Download Queue"
+        queue.maxConcurrentOperationCount = 1
+        return queue
+    }()
+    
+    lazy var filtrationQueue: OperationQueue = {
+        var queue = OperationQueue()
+        queue.name = "Filtration Queue"
         queue.maxConcurrentOperationCount = 1
         return queue
     }()

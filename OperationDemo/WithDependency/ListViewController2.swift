@@ -4,14 +4,14 @@ import UIKit
 
 class ListViewController2: UITableViewController {
 
-    var photos: [PhotoRecord] = []
+    var photos: [PhotoRecord] = [PhotoRecord(name: "Hello", url: URL(string: "http://www.freeimages.com/pic/m/r/ro/rockberto/489872_lago_todos_los_santos.jpg")!)]
     let pendingOperations = PendingOperations()
     
     override func viewDidLoad() {
         super.viewDidLoad()
 
         self.title = "Classic Photos"
-        fetchPhotoDetails()
+        //fetchPhotoDetails()
     }
     
     func fetchPhotoDetails() {
@@ -117,15 +117,34 @@ class ListViewController2: UITableViewController {
         let downloadOperation = ImageDownloader(photoRecord)
         let imageFiltrationOperation = ImageFiltration(photoRecord)
         imageFiltrationOperation.addDependency(downloadOperation)
-        self.pendingOperations.downloadInProgress[indexPath] = imageFiltrationOperation
+        self.pendingOperations.downloadInProgress[indexPath] = downloadOperation
+        self.pendingOperations.filtrationsInProgress[indexPath] = imageFiltrationOperation
         self.pendingOperations.downloadQueue.addOperation(downloadOperation)
-        self.pendingOperations.downloadQueue.addOperation(imageFiltrationOperation)
-        imageFiltrationOperation.completionBlock = {
+        self.pendingOperations.filtrationQueue.addOperation(imageFiltrationOperation)
+        downloadOperation.completionBlock = {
+            self.pendingOperations.downloadInProgress.removeValue(forKey: indexPath)
+
             if downloadOperation.isCancelled{
+                print(">>>>>>>>>>>>>>>>>>>>>Inside competion of download cancelled")
+                imageFiltrationOperation.cancel()
                 return
             }
+            print(">>>>>>>>>>>>>>>>>>>>>Inside competion of download")
+
             DispatchQueue.main.async {
-                self.pendingOperations.downloadInProgress.removeValue(forKey: indexPath)
+                print(">>>>>>>>>>>>>>>>>>>>>Inside competion of download on main queue")
+                self.tableView.reloadRows(at: [indexPath], with: .fade)
+            }
+        }
+        imageFiltrationOperation.completionBlock = {
+            self.pendingOperations.filtrationsInProgress.removeValue(forKey: indexPath)
+            if imageFiltrationOperation.isCancelled || downloadOperation.isCancelled{
+                print(">>>>>>>>>>>>>>>>>>>>>Inside competion of filteration cancelled")
+                return
+            }
+            print(">>>>>>>>>>>>>>>>>>>>>Inside competion of filteration")
+            DispatchQueue.main.async {
+                print(">>>>>>>>>>>>>>>>>>>>>Inside competion of filteration on main queue")
                 self.tableView.reloadRows(at: [indexPath], with: .fade)
             }
         }
